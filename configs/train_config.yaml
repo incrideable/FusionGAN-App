@@ -1,0 +1,99 @@
+# FusionGAN 训练配置文件
+
+# 数据集配置
+dataset:
+  name: "TNO"  # 数据集名称: TNO, KAIST
+  data_dir: "data/samples"
+  image_size: [256, 256]
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+
+# 数据增强
+augmentation:
+  enabled: true
+  horizontal_flip: 0.5
+  rotation_range: 10
+  brightness_range: 0.1
+  noise_std: 0.01
+
+# 模型配置
+model:
+  generator:
+    in_channels: 2  # 红外 + 可见光
+    out_channels: 1  # 融合图像
+    features: 64  # 基础特征数
+    use_attention: true
+    dropout: 0.1
+    
+  discriminator:
+    in_channels: 1  # 输入图像通道数
+    features: 64  # 基础特征数
+    patch_size: 70  # PatchGAN的patch大小
+
+# 训练配置
+training:
+  batch_size: 8
+  epochs: 100
+  learning_rate:
+    generator: 0.0002
+    discriminator: 0.0002
+  beta1: 0.5  # Adam优化器的beta1参数
+  beta2: 0.999  # Adam优化器的beta2参数
+  
+  # 损失函数权重
+  loss_weights:
+    adversarial: 1.0
+    feature_matching: 10.0
+    l1: 100.0
+    perceptual: 0.1
+    
+  # 学习率调度
+  lr_scheduler:
+    enabled: true
+    step_size: 30
+    gamma: 0.1
+    
+  # 渐进式训练
+  progressive:
+    enabled: true
+    l1_warmup_epochs: 10  # 前10个epoch主要使用L1损失
+    
+  # 早停
+  early_stopping:
+    enabled: true
+    patience: 15
+    min_delta: 0.001
+
+# 评估配置
+evaluation:
+  metrics: ["ssim", "psnr", "mi", "std", "entropy", "sf"]
+  save_best_only: true
+  monitor_metric: "ssim"
+  mode: "max"  # max or min
+
+# 硬件配置
+device:
+  gpu_id: 0
+  num_workers: 4
+  pin_memory: true
+
+# 日志配置
+logging:
+  log_dir: "logs"
+  save_interval: 10  # 每10个epoch保存一次模型
+  print_interval: 100  # 每100个batch打印一次
+  tensorboard: true
+  
+# 可视化配置
+visualization:
+  enabled: true
+  save_images: true
+  num_samples: 4  # 每次保存的样本数
+  cmap: "gray"  # 颜色映射
+
+# 模型保存配置
+checkpoint:
+  save_dir: "checkpoints"
+  save_best: true
+  max_to_keep: 5  # 最多保留5个检查点
